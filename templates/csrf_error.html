@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}CSRF Error - Broadsens Order Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="alert alert-danger">
+            <h4><i class="fas fa-exclamation-triangle me-2"></i>Security Error</h4>
+            <p>CSRF token validation failed. This could be due to:</p>
+            <ul>
+                <li>Session expired</li>
+                <li>Form submitted from an external site</li>
+                <li>Browser cookies disabled</li>
+            </ul>
+            <p><strong>Error details:</strong> {{ reason }}</p>
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Try Again</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

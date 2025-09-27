@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Create Order - BroadSens Sensor Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Create New Order</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('orders') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Orders
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>Order Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="orderForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customer_id" class="form-label">Customer <span class="text-danger">*</span></label>
+                                <select class="form-select" id="customer_id" name="customer_id" required>
+                                    <option value="">Select Customer...</option>
+                                    {% for customer in customers %}
+                                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="site_id" class="form-label">Site <span class="text-danger">*</span></label>
+                                <select class="form-select" id="site_id" name="site_id" required disabled>
+                                    <option value="">Select Customer First...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="po_number" class="form-label">PO Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="po_number" name="po_number" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="invoice_number" class="form-label">Invoice Number</label>
+                                <input type="text" class="form-control" id="invoice_number" name="invoice_number">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <hr>
+                    <h5>Sensor Items</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="sensor_type" class="form-label">Sensor Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="sensor_type" name="sensor_type" required>
+                                    <option value="">Select Sensor Type...</option>
+                                    {% for sensor_type in sensor_types %}
+                                    <option value="{{ sensor_type.type_code }}">{{ sensor_type.type_code }} - {{ sensor_type.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="model" class="form-label">Model <span class="text-danger">*</span></label>
+                                <select class="form-select" id="model" name="model" required disabled>
+                                    <option value="">Select Sensor Type First...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('orders') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Create Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('customer_id').addEventListener('change', function() {
+    const customerId = this.value;
+    const siteSelect = document.getElementById('site_id');
+    
+    if (customerId) {
+        fetch(`/get_sites/${customerId}`)
+            .then(response => response.json())
+            .then(sites => {
+                siteSelect.innerHTML = '<option value="">Select Site...</option>';
+                sites.forEach(site => {
+                    siteSelect.innerHTML += `<option value="${site.id}">${site.name}</option>`;
+                });
+                siteSelect.disabled = false;
+            });
+    } else {
+        siteSelect.innerHTML = '<option value="">Select Customer First...</option>';
+        siteSelect.disabled = true;
+    }
+});
+
+document.getElementById('sensor_type').addEventListener('change', function() {
+    const sensorType = this.value;
+    const modelSelect = document.getElementById('model');
+    
+    if (sensorType) {
+        fetch(`/get_models/${sensorType}`)
+            .then(response => response.json())
+            .then(models => {
+                modelSelect.innerHTML = '<option value="">Select Model...</option>';
+                models.forEach(model => {
+                    modelSelect.innerHTML += `<option value="${model}">${model}</option>`;
+                });
+                modelSelect.disabled = false;
+            });
+    } else {
+        modelSelect.innerHTML = '<option value="">Select Sensor Type First...</option>';
+        modelSelect.disabled = true;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Order - Broadsens Order Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Edit Order</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('orders') }}?token={{ auth_token }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Orders
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Edit Order Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="orderForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customer_id" class="form-label">Customer <span class="text-danger">*</span></label>
+                                <select class="form-select" id="customer_id" name="customer_id" required>
+                                    <option value="">Select Customer...</option>
+                                    {% for customer in customers %}
+                                    <option value="{{ customer.id }}" {{ 'selected' if customer.id == order.customer_id else '' }}>{{ customer.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="site_id" class="form-label">Site <span class="text-danger">*</span></label>
+                                <select class="form-select" id="site_id" name="site_id" required>
+                                    <option value="{{ order.site_id }}" selected>{{ order.site_name }}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="po_number" class="form-label">PO Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="po_number" name="po_number" value="{{ order.po_number }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="invoice_number" class="form-label">Invoice Number</label>
+                                <input type="text" class="form-control" id="invoice_number" name="invoice_number" value="{{ order.invoice_number }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Sensor Items</h5>
+                        <button type="button" class="btn btn-success btn-sm" id="addSensorBtn">
+                            <i class="fas fa-plus me-1"></i>Add Sensor Type
+                        </button>
+                    </div>
+                    
+                    <div id="sensorItemsContainer">
+                        {% for sensor in order.sensors %}
+                        <div class="sensor-item border rounded p-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">Sensor Item #{{ loop.index }}</h6>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-sensor" style="display: {{ 'inline-block' if order.sensors|length > 1 else 'none' }};">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Sensor Type <span class="text-danger">*</span></label>
+                                        <select class="form-select sensor-type" name="sensor_type_{{ loop.index0 }}" required>
+                                            <option value="">Select Sensor Type...</option>
+                                            {% for sensor_type in sensor_types %}
+                                            <option value="{{ sensor_type.type_code }}" {{ 'selected' if sensor_type.type_code == sensor.sensor_type else '' }}>{{ sensor_type.type_code }} - {{ sensor_type.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Model <span class="text-danger">*</span></label>
+                                        <select class="form-select sensor-model" name="model_{{ loop.index0 }}" required>
+                                            <option value="{{ sensor.model }}" selected>{{ sensor.model }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" name="quantity_{{ loop.index0 }}" min="1" value="{{ sensor.quantity }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ order.notes }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('orders') }}?token={{ auth_token }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let sensorItemCount = {{ order.sensors|length }};
+const authToken = '{{ auth_token }}';
+
+// Customer site selection
+document.getElementById('customer_id').addEventListener('change', function() {
+    const customerId = this.value;
+    const siteSelect = document.getElementById('site_id');
+    
+    if (customerId) {
+        fetch(`/get_sites/${customerId}?token=${authToken}`)
+            .then(response => response.json())
+            .then(sites => {
+                siteSelect.innerHTML = '<option value="">Select Site...</option>';
+                sites.forEach(site => {
+                    siteSelect.innerHTML += `<option value="${site.id}" ${site.id === '{{ order.site_id }}' ? 'selected' : ''}>${site.name}</option>`;
+                });
+                siteSelect.disabled = false;
+            });
+    } else {
+        siteSelect.innerHTML = '<option value="">Select Customer First...</option>';
+        siteSelect.disabled = true;
+    }
+});
+
+// Function to setup sensor type change listener for a specific item
+function setupSensorTypeListener(sensorTypeSelect, modelSelect) {
+    sensorTypeSelect.addEventListener('change', function() {
+        const sensorType = this.value;
+        
+        if (sensorType) {
+            fetch(`/get_models/${sensorType}?token=${authToken}`)
+                .then(response => response.json())
+                .then(models => {
+                    modelSelect.innerHTML = '<option value="">Select Model...</option>';
+                    models.forEach(model => {
+                        modelSelect.innerHTML += `<option value="${model}">${model}</option>`;
+                    });
+                    modelSelect.disabled = false;
+                });
+        } else {
+            modelSelect.innerHTML = '<option value="">Select Sensor Type First...</option>';
+            modelSelect.disabled = true;
+        }
+    });
+}
+
+// Setup initial sensor type listeners for existing items
+document.querySelectorAll('.sensor-type').forEach(sensorTypeSelect => {
+    const parentItem = sensorTypeSelect.closest('.sensor-item');
+    const modelSelect = parentItem.querySelector('.sensor-model');
+    setupSensorTypeListener(sensorTypeSelect, modelSelect);
+});
+
+// Add sensor item functionality
+document.getElementById('addSensorBtn').addEventListener('click', function() {
+    const container = document.getElementById('sensorItemsContainer');
+    const sensorHTML = `
+        <div class="sensor-item border rounded p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Sensor Item #${sensorItemCount + 1}</h6>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-sensor">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Sensor Type <span class="text-danger">*</span></label>
+                        <select class="form-select sensor-type" name="sensor_type_${sensorItemCount}" required>
+                            <option value="">Select Sensor Type...</option>
+                            {% for sensor_type in sensor_types %}
+                            <option value="{{ sensor_type.type_code }}">{{ sensor_type.type_code }} - {{ sensor_type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Model <span class="text-danger">*</span></label>
+                        <select class="form-select sensor-model" name="model_${sensorItemCount}" required disabled>
+                            <option value="">Select Sensor Type First...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="quantity_${sensorItemCount}" min="1" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', sensorHTML);
+    sensorItemCount++;
+    
+    // Setup listeners for the new item
+    const newSensorItems = container.querySelectorAll('.sensor-item');
+    const newItem = newSensorItems[newSensorItems.length - 1];
+    const newSensorType = newItem.querySelector('.sensor-type');
+    const newModel = newItem.querySelector('.sensor-model');
+    setupSensorTypeListener(newSensorType, newModel);
+    
+    // Show remove buttons if more than one item
+    updateRemoveButtons();
+});
+
+// Remove sensor item functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-sensor')) {
+        e.target.closest('.sensor-item').remove();
+        updateRemoveButtons();
+        updateSensorItemNumbers();
+    }
+});
+
+// Update remove button visibility
+function updateRemoveButtons() {
+    const sensorItems = document.querySelectorAll('.sensor-item');
+    const removeButtons = document.querySelectorAll('.remove-sensor');
+    
+    if (sensorItems.length > 1) {
+        removeButtons.forEach(btn => btn.style.display = 'inline-block');
+    } else {
+        removeButtons.forEach(btn => btn.style.display = 'none');
+    }
+}
+
+// Update sensor item numbering
+function updateSensorItemNumbers() {
+    const sensorItems = document.querySelectorAll('.sensor-item');
+    sensorItems.forEach((item, index) => {
+        const header = item.querySelector('h6');
+        header.textContent = `Sensor Item #${index + 1}`;
+    });
+}
+</script>
+{% endblock %}

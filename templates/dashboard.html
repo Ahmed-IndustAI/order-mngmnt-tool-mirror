@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Broadsens Order Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('add_customer') }}?token={{ auth_token }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-user-plus me-1"></i>Add Customer
+            </a>
+            <a href="{{ url_for('create_order') }}?token={{ auth_token }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-plus me-1"></i>New Order
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="small text-muted">Total Customers</div>
+                        <div class="fs-4 fw-bold">{{ stats.total_customers }}</div>
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-users fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="small text-muted">Total Sites</div>
+                        <div class="fs-4 fw-bold">{{ stats.total_sites }}</div>
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-map-marker-alt fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="small text-muted">Total Orders</div>
+                        <div class="fs-4 fw-bold">{{ stats.total_orders }}</div>
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-shopping-cart fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="small text-muted">Assigned Sensors</div>
+                        <div class="fs-4 fw-bold">{{ stats.total_assigned_sensors }}</div>
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-microchip fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="small text-muted">Sensor Types</div>
+                        <div class="fs-4 fw-bold">{{ stats.total_sensor_types }}</div>
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-tags fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Customers -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>Recent Customers
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if customers %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Contact</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in customers %}
+                                <tr>
+                                    <td><strong>{{ customer.name }}</strong></td>
+                                    <td>{{ customer.contact_person }}</td>
+                                    <td>{{ customer.email }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-2">
+                        <a href="{{ url_for('customers') }}?token={{ auth_token }}" class="btn btn-sm btn-outline-primary">
+                            View All Customers
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <p>No customers yet.</p>
+                        <a href="{{ url_for('add_customer') }}?token={{ auth_token }}" class="btn btn-primary">
+                            Add First Customer
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shopping-cart me-2"></i>Recent Orders
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>PO Number</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('order_details', order_id=order.id) }}?token={{ auth_token }}" class="text-decoration-none">
+                                            {{ order.po_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ order.order_date[:10] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-2">
+                        <a href="{{ url_for('orders') }}?token={{ auth_token }}" class="btn btn-sm btn-outline-primary">
+                            View All Orders
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                        <p>No orders yet.</p>
+                        <a href="{{ url_for('create_order') }}?token={{ auth_token }}" class="btn btn-primary">
+                            Create First Order
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+# HTML
+# Archive your static HTML project and save it with the build record.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: self
+  persistCredentials: true
+
+- script: |
+    # Check Git version
+    git --version
+
+    # Create a temporary directory for our fresh repository
+    echo "Creating fresh repository..."
+    mkdir -p $(Agent.TempDirectory)/fresh-repo
+    cd $(Agent.TempDirectory)/fresh-repo
+
+    git init
+    # Set Git identity
+    git config --global user.email "a.ahmed@industrai.eu"
+    git config --global user.name "Ahmed-IndustAI"
+    
+    # Copy only the current files from the source repository (no Git history)
+    echo "Copying current files only..."
+    cp -r $(Build.Repository.LocalPath)/* . 2>/dev/null || true
+    # Copy hidden files except .git
+    find $(Build.Repository.LocalPath) -maxdepth 1 -name ".*" -not -name ".git" -exec cp -r {} . \; 2>/dev/null || true
+    
+    # List files to verify
+    echo "Files to be committed:"
+    ls -la
+    
+    # Add all files and create a new commit
+    git add -A
+    git commit -m "update github mirror with latest changes in azure devops repos"
+
+    git remote add github https://$(GITHUBPAT)@github.com/Ahmed-IndustAI/order-mngmnt-tool-mirror.git
+    
+    # Push to GitHub with detailed output
+    echo "Pushing to GitHub..."
+    git push github HEAD:refs/heads/main --force -v
+    
+    echo "Push operation completed."
+    
+  displayName: 'Push to GitHub'
+

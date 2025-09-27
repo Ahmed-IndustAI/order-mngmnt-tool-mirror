@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Sensor Types - BroadSens Sensor Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">BroadSens Sensor Types</h1>
+</div>
+
+<div class="row">
+    {% for sensor_type in sensor_types %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-microchip me-2"></i>{{ sensor_type.type_code }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">{{ sensor_type.name }}</h6>
+                <p class="card-text">{{ sensor_type.description }}</p>
+                <h6>Available Models:</h6>
+                <div class="row">
+                    {% for model in sensor_type.models %}
+                    <div class="col-6 mb-1">
+                        <span class="badge bg-light text-dark">{{ model }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{{ sensor_type.models|length }} models available</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Capacity Limit:</strong> Each site can accommodate up to 3,844 sensors per sensor type.
+</div>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - Broadsens Order Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Order Details</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('orders') }}?token={{ auth_token }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Orders
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shopping-cart me-2"></i>Order Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Order ID:</th>
+                                <td><code>{{ order.id }}</code></td>
+                            </tr>
+                            <tr>
+                                <th>PO Number:</th>
+                                <td><strong>{{ order.po_number }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Invoice Number:</th>
+                                <td>{{ order.invoice_number or 'Pending' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Order Date:</th>
+                                <td>{{ order.order_date[:10] }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Customer Information</h6>
+                        {% if customer %}
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Company:</th>
+                                <td>{{ customer.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Contact:</th>
+                                <td>{{ customer.contact_person }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td><a href="mailto:{{ customer.email }}">{{ customer.email }}</a></td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                        
+                        <h6>Site Information</h6>
+                        {% if site %}
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Site:</th>
+                                <td>{{ site.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Location:</th>
+                                <td>{{ site.location }}</td>
+                            </tr>
+                            <tr>
+                                <th>Contact:</th>
+                                <td>{{ site.contact_person }}</td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if order.notes %}
+                <div class="mt-3">
+                    <h6>Notes</h6>
+                    <p class="text-muted">{{ order.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Sensors
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sensor Type</th>
+                                <th>Model</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sensor in order.sensors %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ sensor['sensor_type'] }}</span>
+                                </td>
+                                <td>{{ sensor['model'] }}</td>
+                                <td><strong>{{ sensor['quantity'] }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tags me-2"></i>Assigned Sensor IDs
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if used_ids %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Sensor ID</th>
+                                    <th>Group ID</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for uid in used_ids %}
+                                <tr>
+                                    <td><strong>{{ uid.sensor_id }}</strong></td>
+                                    <td><code>{{ uid.group_id }}</code></td>
+                                    <td>{{ uid.sensor_type }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">{{ used_ids|length }} sensor(s) assigned</small>
+                        <div class="mt-2">
+                            <a href="{{ url_for('export_order_sensors', order_id=order.id) }}?token={{ auth_token }}" 
+                               class="btn btn-sm btn-success">
+                                <i class="fas fa-download me-1"></i>Export Sensors
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-tags fa-2x mb-2"></i>
+                        <p>No sensor IDs assigned yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
